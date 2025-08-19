@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# -------- env with sane defaults --------
+# -------- env defaults --------
 TZ="${TZ:-UTC}"
 SERVER_NAME="${SERVER_NAME:-My Valheim Server}"
 WORLD_NAME="${WORLD_NAME:-Dedicated}"
 SERVER_PASS="${SERVER_PASS:-changeme}"
-SERVER_PUBLIC="${SERVER_PUBLIC:-0}"      # 0 = private list
+SERVER_PUBLIC="${SERVER_PUBLIC:-0}"   # 0=private, 1=public
 SERVER_PORT="${SERVER_PORT:-2456}"
-
 export TZ
 
 VALHEIMDIR="/opt/valheim"
@@ -18,30 +17,20 @@ WORLDSDIR="${SAVEDIR}/worlds_local"
 
 mkdir -p "${WORLDSDIR}" "${CONFIGDIR}/backups" "${VALHEIMDIR}"
 
-# -------- robust steamcmd finder --------
-find_steamcmd() {
+# -------- find steamcmd (prefer PATH; fallbacks included) --------
+STEAMCMD_BIN="$(command -v steamcmd || true)"
+if [ -z "${STEAMCMD_BIN}" ]; then
   for p in \
     "/home/steam/steamcmd/steamcmd.sh" \
     "/steamcmd/steamcmd.sh" \
     "/usr/games/steamcmd" \
-    "/usr/bin/steamcmd" \
-    "/bin/steamcmd"
-  do
-    if [ -x "$p" ]; then
-      echo "$p"
-      return 0
-    fi
+    "/usr/bin/steamcmd" ; do
+    [ -x "$p" ] && STEAMCMD_BIN="$p" && break
   done
-  if command -v steamcmd >/dev/null 2>&1; then
-    command -v steamcmd
-    return 0
-  fi
-  return 1
-}
+fi
 
-STEAMCMD_BIN="$(find_steamcmd || true)"
 if [ -z "${STEAMCMD_BIN}" ]; then
-  echo "[entrypoint] ERROR: steamcmd not found. Listing likely dirs..."
+  echo "[entrypoint] ERROR: steamcmd not found. Checked common paths and PATH."
   ls -lah /home/steam || true
   ls -lah /home/steam/steamcmd || true
   exit 1
@@ -57,14 +46,12 @@ echo "[entrypoint] Updating Valheim dedicated server via SteamCMD..."
 SERVER_BIN="${VALHEIMDIR}/valheim_server.x86_64"
 if [ ! -x "${SERVER_BIN}" ]; then
   echo "[entrypoint] ERROR: server binary not found at ${SERVER_BIN}"
-  echo "[entrypoint] Contents of ${VALHEIMDIR}:"
   ls -lah "${VALHEIMDIR}" || true
   exit 1
 fi
 
 echo "[entrypoint] Starting server '${SERVER_NAME}' world='${WORLD_NAME}' port=${SERVER_PORT} public=${SERVER_PUBLIC}"
 cd "${VALHEIMDIR}"
-
 exec "${SERVER_BIN}" \
   -name "${SERVER_NAME}" \
   -port "${SERVER_PORT}" \
