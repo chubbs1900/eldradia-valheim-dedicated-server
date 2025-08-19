@@ -1,30 +1,28 @@
-FROM ubuntu:22.04
+# Smaller, simpler base
+FROM debian:bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive \
     STEAMCMDDIR=/opt/steamcmd \
     VALHEIMDIR=/opt/valheim
 
-# Basic deps + steamcmd (from multiverse) + runtime libs
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates locales tzdata curl wget net-tools dumb-init \
-      software-properties-common \
-    && dpkg --add-architecture i386 \
-    && add-apt-repository multiverse \
-    && apt-get update && apt-get install -y --no-install-recommends \
-      steamcmd \
-      lib32gcc-s1 \
-      libstdc++6 \
-      libstdc++6:i386 \
-      libsdl2-2.0-0 \
-    && ln -s /usr/games/steamcmd ${STEAMCMDDIR} \
-    && mkdir -p ${VALHEIMDIR} /config \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# 32-bit runtime libs + tools
+RUN dpkg --add-architecture i386 \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends \
+      ca-certificates locales tzdata curl wget net-tools dumb-init tar \
+      lib32gcc-s1 libstdc++6 libstdc++6:i386 libsdl2-2.0-0 \
+ && rm -rf /var/lib/apt/lists/*
+
+# Install SteamCMD directly from Valve
+RUN mkdir -p ${STEAMCMDDIR} ${VALHEIMDIR} /config \
+ && curl -sSL https://steamcdn.cloudflare.steamstatic.com/client/installer/steamcmd_linux.tar.gz \
+    | tar -xz -C ${STEAMCMDDIR}
 
 # Copy entrypoint
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Expose UDP for server
+# Expose UDP ports used by Valheim
 EXPOSE 2456/udp 2457/udp 2458/udp
 
 WORKDIR ${VALHEIMDIR}
