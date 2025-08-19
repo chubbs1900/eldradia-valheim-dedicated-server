@@ -1,19 +1,20 @@
-version: "3.9"
+version: "3.8"
 
 services:
   valheim:
-    image: ghcr.io/chubbs1900/eldradia-valheim-dedicated-server:latest
+    build: .
     container_name: valheim
-    stop_grace_period: 120s
+    cap_add:
+      - sys_nice
     ports:
-      - "2456-2458:2456-2458/udp"
-    environment:
-      TZ: America/New_York
-      SERVER_NAME: Eldradia Reborn
-      WORLD_NAME: Eldradia
-      SERVER_PASS: change-me
-      SERVER_PUBLIC: "0"    # 1 = public
-      SERVER_PORT: "2456"
+      - "2456-2457:2456-2457/udp"
     volumes:
-      - "C:/Valheim:/config"   # change to P:/Valheim if you prefer
+      - "C:/ValheimServer:/config"
+      - "C:/ValheimServer/data:/home/steam/valheim"
+    environment:
+      - SERVER_NAME=Eldradia Reborn
+      - WORLD_NAME=Eldradia
+      - SERVER_PASS=xdxdx
+      - SERVER_PUBLIC=0
+      - TZ=America/New_York
     restart: unless-stopped
