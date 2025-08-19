@@ -1,4 +1,4 @@
-# Valheim Dedicated Server — from scratch (Docker)
+# Valheim Dedicated Server — Eldradia (Docker)
 
 - Minimal Ubuntu + SteamCMD
 - Downloads/updates the server on **container start** (no game files baked in)
