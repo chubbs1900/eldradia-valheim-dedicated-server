@@ -11,7 +11,7 @@ SERVER_PORT="${SERVER_PORT:-2456}"
 
 export TZ
 
-STEAMCMDDIR="/steamcmd"
+STEAMCMDDIR="/home/steam/steamcmd"
 VALHEIMDIR="/opt/valheim"
 CONFIGDIR="/config"
 SAVEDIR="${CONFIGDIR}/saves"
