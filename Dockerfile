@@ -3,8 +3,9 @@ FROM steamcmd/steamcmd:latest
 
 USER root
 ENV DEBIAN_FRONTEND=noninteractive \
-    STEAMCMDDIR=/steamcmd \
+    STEAMCMDDIR=/home/steam/steamcmd \
     VALHEIMDIR=/opt/valheim
+# ...rest unchanged...
 
 # Minimal runtime deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
