@@ -1,27 +1,29 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env sh
+set -eu
 
-# env defaults
-TZ="${TZ:-UTC}"
-SERVER_NAME="${SERVER_NAME:-My Valheim Server}"
-WORLD_NAME="${WORLD_NAME:-Dedicated}"
-SERVER_PASS="${SERVER_PASS:-changeme}"
-SERVER_PUBLIC="${SERVER_PUBLIC:-0}"   # 0 = private, 1 = public
-SERVER_PORT="${SERVER_PORT:-2456}"
-export TZ
+# Defaults
+: "${TZ:=UTC}"
+: "${SERVER_NAME:=My Valheim Server}"
+: "${WORLD_NAME:=Dedicated}"
+: "${SERVER_PASS:=changeme}"
+: "${SERVER_PUBLIC:=0}"
+: "${SERVER_PORT:=2456}"
 
 VALHEIMDIR="/opt/valheim"
 CONFIGDIR="/config"
 SAVEDIR="${CONFIGDIR}/saves"
 WORLDSDIR="${SAVEDIR}/worlds_local"
+
 mkdir -p "${WORLDSDIR}" "${CONFIGDIR}/backups" "${VALHEIMDIR}"
 
-# find steamcmd from PATH (provided by base image)
-STEAMCMD_BIN="$(command -v steamcmd || true)"
-if [ -z "${STEAMCMD_BIN}" ]; then
+# Find steamcmd on PATH (provided by base image)
+if command -v steamcmd >/dev/null 2>&1; then
+  STEAMCMD_BIN="$(command -v steamcmd)"
+else
   echo "[entrypoint] ERROR: steamcmd not found on PATH."
   exit 1
 fi
+
 echo "[entrypoint] Using steamcmd at: ${STEAMCMD_BIN}"
 echo "[entrypoint] Updating Valheim dedicated server via SteamCMD..."
 "${STEAMCMD_BIN}" +login anonymous \
