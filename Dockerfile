@@ -1,24 +1,27 @@
-FROM steamcmd/steamcmd:latest
+FROM debian:bullseye-slim
 
-# Install tiny runtime deps; prep folders; fix permissions
-USER root
-ENV DEBIAN_FRONTEND=noninteractive \
-    VALHEIMDIR=/opt/valheim
+ENV STEAMCMDDIR=/home/steam/steamcmd \
+    VALHEIMDIR=/home/steam/valheim \
+    PUID=1000 \
+    PGID=1000
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      dumb-init ca-certificates libsdl2-2.0-0 lib32gcc-s1 \
-  && rm -rf /var/lib/apt/lists/* \
-  && mkdir -p ${VALHEIMDIR} /config \
-  && chown -R steam:steam ${VALHEIMDIR} /config
+    ca-certificates locales tzdata curl wget net-tools dumb-init \
+    lib32gcc-s1 libstdc++6 libsdl2-2.0-0 \
+ && rm -rf /var/lib/apt/lists/*
 
-# Entrypoint script
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh && chown steam:steam /entrypoint.sh
+# Create steam user and directories
+RUN useradd -m steam && mkdir -p ${STEAMCMDDIR} ${VALHEIMDIR} /config \
+ && chown -R steam:steam /home/steam /config
 
-# Run as the unprivileged 'steam' user
+# Install SteamCMD
 USER steam
+WORKDIR ${STEAMCMDDIR}
+RUN curl -sSL https://steamcdn.cloudflare.steamstatic.com/client/installer/steamcmd_linux.tar.gz \
+ | tar -xz
 
-EXPOSE 2456/udp 2457/udp 2458/udp
+COPY --chown=steam:steam entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 WORKDIR ${VALHEIMDIR}
-ENTRYPOINT ["/usr/bin/dumb-init","--"]
-CMD ["/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
