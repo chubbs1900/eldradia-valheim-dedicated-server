@@ -1,6 +1,6 @@
 FROM steamcmd/steamcmd:latest
 
-# We need root only to install a couple tiny deps, then run as 'steam'
+# Install tiny runtime deps; prep folders; fix permissions
 USER root
 ENV DEBIAN_FRONTEND=noninteractive \
     VALHEIMDIR=/opt/valheim
@@ -11,10 +11,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && mkdir -p ${VALHEIMDIR} /config \
   && chown -R steam:steam ${VALHEIMDIR} /config
 
+# Entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && chown steam:steam /entrypoint.sh
 
-# Switch back to the steam user for runtime
+# Run as the unprivileged 'steam' user
 USER steam
 
 EXPOSE 2456/udp 2457/udp 2458/udp
